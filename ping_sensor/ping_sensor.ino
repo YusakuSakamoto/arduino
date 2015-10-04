@@ -1,13 +1,16 @@
+//the body to send to pc.
+unsigned char packet[30];
+
+//structure of send information but not body.
 typedef struct{
   double inches;
   double cm;
   unsigned char checksum;
 }sendpc;
+sendpc data = {0};
 
 const int pingPin = 7;
-unsigned char packet[30];
-sendpc data = {0};
-  
+
 void setup() {
   Serial.begin(9600);
 }
@@ -26,55 +29,101 @@ void loop() {
   duration = pulseIn(pingPin, HIGH);
   data.inches = microsecondsToInches(duration);
   data.cm = microsecondsToCentimeters(duration);
+
   
   int i;
-  i = create_checksum();
+  i = create_packet();
   Serial.write(packet,i);
-  //Serial.println();
-  
 }
 
-void calc_checksum(unsigned char* confirm){
-  int m,count,k;
-  
-  count = sizeof(confirm)/sizeof(unsigned char);
 
+// this function calc XOR unsigned char array after '$' before '*' 
+void calc_checksum(unsigned char* confirm){
+  int m=2;
   data.checksum = confirm[1];
-  
   for( m=2; confirm[m] != '*'; m++ ){
-	if( confirm[m] != '*'){
-	  if(confirm[m] != '$' && confirm[m] != ',')
-		data.checksum = data.checksum ^ confirm[m];
-	}
+	if(confirm[m] != '$' && confirm[m] != ',')
+	  data.checksum = data.checksum ^ confirm[m];
   }
 }
 
-int create_checksum(){
+//the aid array is unsigned char.
+//this function cast unsigned char to hexadecimal.
+//and input pack 2 byte.
+void Convert_Hexadecimal(unsigned char aid, unsigned char *pack,int count){
+  switch( (int)( aid/16 ) ){
+  case 10:
+	pack[count++] = 'a';
+	break;
+  case 11:
+	pack[count++] = 'b';
+	break;
+  case 12:
+	pack[count++] = 'c';
+	break;
+  case 13:
+	pack[count++] = 'd';
+	break;
+  case 14:
+	pack[count++] = 'e';
+	break;
+  case 15:
+	pack[count++] = 'f';
+	break;
+  default:
+	pack[count++] = 48 + (int)(aid/16);
+  }
+  
+  switch((int)(aid%16)){
+  case 10:
+	pack[count++] = 'a';
+	break;
+  case 11:
+	pack[count++] = 'b';
+	break;
+  case 12:
+	pack[count++] = 'c';
+	break;
+  case 13:
+	pack[count++] = 'd';
+	break;
+  case 14:
+	pack[count++] = 'e';
+	break;
+  case 15:
+	pack[count++] = 'f';
+	break;
+  default:
+	pack[count++] = 48 + (int)(aid%16);
+	break;
+  }    
+}
 
-  int k;
-  int m;
-  int inches;
-  int i=0;
+
+int create_packet(){
+  int index = 0;
+  int inches; 
   int cm;
-  int count=0;
+  int count = 0;
   data.checksum = 0;
   packet[count++] = '$';  
 
   //inches
   //========================================
+  index = 0;
   inches = (int)data.inches;
   while(inches != 0){
-    i++;
-    inches = data.inches * pow(10,-1*i);
+    index++;
+    inches = data.inches * pow( 10, -1 * index );
   }
   
-  while( i > -2 ){
-    if(i==0){
+  while( index > -2 ){
+    if(index==0){
       packet[count++] = '.';
     }
-    i--;
-    inches = data.inches * pow(10,-1*i);
-    data.inches = data.inches - inches * pow(10,i);  
+    index--;
+    inches = data.inches * pow(10,-1*index);
+    data.inches = data.inches - inches * pow(10,index);  
     packet[count++] = (unsigned char)inches + 48;
   }
   //========================================
@@ -83,77 +132,31 @@ int create_checksum(){
   
   //cm
   //==========================================
-  i=0;
+  index=0;
   cm = (int)data.cm;
   while(cm != 0){
-    i++;
-    cm = data.cm * pow(10,-1*i);
+    index++;
+    cm = data.cm * pow( 10, -1 * index );
   }
   
-  while( i > -2 ){
-    if(i==0){
+  while( index > -2 ){
+    if( index == 0){
       packet[count++] = '.';
     }
-    i--;
-    cm = data.cm * pow(10,-1*i);
-    data.cm = data.cm - cm * pow(10,i);
+    index--;
+    cm = data.cm * pow( 10, -1 * index );
+    data.cm = data.cm - cm * pow( 10, index );
     packet[count++] = (unsigned char) cm + 48;
   }
   //============================================
-  calc_checksum(packet);
-  packet[count++] = '*';  
-  //packet[count++] = data.checksum;
+  calc_checksum(packet);//copy packet to data.checksum with sum unsigned char
+  packet[count++] = '*';
   
-  switch((int)(data.checksum/16)){
-  case 10:
-	packet[count++] = 'a';
-	break;
-  case 11:
-	packet[count++] = 'b';
-	break;
-  case 12:
-	packet[count++] = 'c';
-	break;
-  case 13:
-	packet[count++] = 'd';
-	break;
-  case 14:
-	packet[count++] = 'e';
-	break;
-  case 15:
-	packet[count++] = 'f';
-	break;
-  default:
-	packet[count++] = 48 + (int)(data.checksum/16);
-  }
-  
-  switch((int)(data.checksum%16)){
-  case 10:
-	packet[count++] = 'a';
-	break;
-  case 11:
-	packet[count++] = 'b';
-	break;
-  case 12:
-	packet[count++] = 'c';
-	break;
-  case 13:
-	packet[count++] = 'd';
-	break;
-  case 14:
-	packet[count++] = 'e';
-	break;
-  case 15:
-	packet[count++] = 'f';
-	break;
-  default:
-	packet[count++] = 48 + (int)(data.checksum%16);
-	break;
-  }
-
+  //convert data.checksum to Hexadecimal and add pocket 
+  Convert_Hexadecimal(data.checksum,packet,count);
   packet[count++] = '\n';
-  return count;
   
+  return count;  
 }
 
 double microsecondsToInches(double microseconds) {
