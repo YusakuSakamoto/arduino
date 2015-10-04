@@ -3,7 +3,7 @@
 using namespace std;
 
 Arduino::Arduino():
-  analize_start(0),
+  analize_start(false),
   data_num(0)
 {
   Open( arduino_serial.c_str() , Arduino_baudrate);
@@ -121,13 +121,9 @@ int Arduino::show_recieveinfo()
 }
 
 void Arduino::calc_checksum(unsigned char* confirm){
-  int m,count,k;
+  int m;
   unsigned char checksum;
-  //cout << confirm << endl;
-  count = sizeof(confirm)/sizeof(unsigned char);
-
-  checksum = confirm[0];
-  
+  checksum = confirm[0];  
   for( m=1; confirm[m] != '*'; m++ ){
 	if(confirm[m] != '$' && confirm[m] != ',')
 	  checksum = checksum ^ confirm[m];

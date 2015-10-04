@@ -36,11 +36,11 @@ public:
 private:
   unsigned char input[30];
   unsigned char checksum;
-  int data_num;
   arduino_sendtype send;
   arduino_recievetype recieve;
   ping_data ping;
   std::fstream record_file;
+  int data_num;
 public:
   bool analize_start;
   int create_sendinfo(int);
