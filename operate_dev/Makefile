@@ -8,6 +8,7 @@ Arduino =Arduino
 MAIN	= main
 LRF		= UTM-30LX
 GPS		= gps
+CONT	= PS3
 
 LRF_OPTION	=`urg_c-config --cflags` `urg_c-config --libs`
 LIB	=-lboost_system -lboost_filesystem -lpthread -std=c++11
@@ -33,8 +34,11 @@ $(Arduino:%=./bin/%.o):$(Arduino:%=./src/%.cpp)
 $(LRF:%=./bin/%.o):$(LRF:%=./src/%.cpp)
 	$(CC) -c $< $(LRF_OPTION) -o $@ $(LIB) -lm
 
-$(MAIN):$(MAIN:%=./bin/%.o) $(Arduino:%=./bin/%.o) $(io:%=./bin/%.o) $(iMCs01:%=./bin/%.o) $(GPS:%=./bin/%.o) $(LRF:%=./bin/%.o)
-	$(CC) $(MAIN:%=./bin/%.o) $(Arduino:%=./bin/%.o) $(io:%=./bin/%.o) $(iMCs01:%=./bin/%.o) $(GPS:%=./bin/%.o) $(LRF:%=./bin/%.o) $(LRF_OPTION) -o $@ $(LIB)
+$(CONT:%=./bin/%.o):$(CONT:%=./src/%.cpp)
+	$(CC) -c $< -o $@ $(LIB) -lm
+
+$(MAIN):$(MAIN:%=./bin/%.o) $(Arduino:%=./bin/%.o) $(io:%=./bin/%.o) $(iMCs01:%=./bin/%.o) $(GPS:%=./bin/%.o) $(LRF:%=./bin/%.o) $(CONT:%=./bin/%.o)
+	$(CC) $(MAIN:%=./bin/%.o) $(Arduino:%=./bin/%.o) $(io:%=./bin/%.o) $(iMCs01:%=./bin/%.o) $(GPS:%=./bin/%.o) $(LRF:%=./bin/%.o) $(CONT:%=./bin/%.o) $(LRF_OPTION) -o $@ $(LIB)
 
 clean:
 	rm $(MAIN:%=./bin/%.o) $(Arduino:%=./bin/%.o) $(io:%=./bin/%.o) $(iMCs01:%=./bin/%.o) $(LRF:%=./bin/%.o) $(GPS:%=./bin/%.o) $(MAIN)
