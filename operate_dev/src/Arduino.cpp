@@ -12,7 +12,7 @@ Arduino::Arduino():
 	exit(-1);
   }
   recieve.counter = 0;
-  recieve.flag = false;
+  recieve.flag = 0;
 }
 
 Arduino::~Arduino()
@@ -46,27 +46,27 @@ int Arduino::show_recieveinfo()
 	input[  recieve.counter++ ] = recieve.moji;
   }else if( recieve.moji == '$'){//ヘッダー無視
   }else{
-	if( recieve.moji == '\n' || recieve.moji == '\0' ){//文の終わりを発見した時
+	if( recieve.moji == '\n' ){//文の終わりを発見した時
 	  //データの分割==========================================
 	  int l=0;
 	  int y=0;
-	  while(input[l++] != '\0' && l<30){
+	  while(input[l] != '\n' && l<30){
 		if(recieve.flag == 2){
 		  if(input[l] != '$'){
 			recieve.checksum[y++] = input[l];
 		  }else{
+			l=0;
 			y=0;
 			recieve.flag = 0;
 		  }
-		}
-		if( recieve.flag == 0 ){
+		}else if( recieve.flag == 0 ){
 		  if(input[l] != ','){
 			recieve.inches[y++] = input[l];
 		  }else{
 			y=0;
 			recieve.flag = 1;
 		  }
-		}else if( recieve.flag  == 1){
+		}else if( recieve.flag  == 1 ){
 		  if(input[l] != '*'){
 			recieve.cm[y++] = input[l];
 		  }else{
@@ -74,6 +74,7 @@ int Arduino::show_recieveinfo()
 			recieve.flag = 2;
 		  }
 		}
+		l++;
 	  }
 	  //=========================================
 
@@ -87,7 +88,7 @@ int Arduino::show_recieveinfo()
 	  calc_checksum(input);
 	  
 	  if ((recieve.checksum[0] == ping.checksum[0]) && (recieve.checksum[1] == ping.checksum[1])){
-		printf("%s .....[ ok ]\n",ping.checksum);
+		printf("%.2f,%.2f,%s .....[ ok ]\n", ping.inches, ping.cm, ping.checksum);
 		//データ出力	  
 		input[  recieve.counter++ ] = '\0';
 		record_file << data_num+1 << "\t" <<ping.inches << "\t" << ping.cm << "\t" << 0 << endl;
