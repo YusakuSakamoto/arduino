@@ -72,7 +72,7 @@ int iMCs01::recieveinfo()
 
   while(1) {
     if ((i = read(fd, &cmd_uin, sizeof(cmd_uin))) != sizeof(cmd_uin)) {
-      fprintf(stderr, "Warning: read size mismatch (%d!=%lu).\n", i, sizeof(cmd_uin));
+      fprintf(stderr, "Warning: read size mismatch (%d != %d).\n", i, sizeof(cmd_uin));
       continue;
     }
     for (i=0; i<4; i++) {
