@@ -2,7 +2,6 @@
 #include "io.hpp"
 #include <sys/ioctl.h>
 #include <stdexcept>
-#include <stdio.h>
 
 const speed_t iMCs01_baudrate = B115200;
 

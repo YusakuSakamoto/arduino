@@ -1,41 +1,24 @@
-/*-------------------------------------------------------------------
-  Name    : control.c
-  Version : 1.0
-  Date    : 2014/03/21
-  Autor   : Ryodo Tanaka (Kyushu Institute of Technology)
-  About   : Get Joy Stick (Playstation 3 DUALSHOCK 3) information
- -------------------------------------------------------------------*/
-//local include
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <linux/joystick.h>
-
 #include "../include/PS3.hpp"
 
-//for debug
-#define printLOG( msg ) fprintf(stderr,"mesg : %s\nfile : %s\nline : %d\n",msg,__FILE__,__LINE__)
+Ps3Joystick::Ps3Joystick(void):
+  axis(NULL),
+  num_of_axis(0),
+  num_of_buttons(0),
+  button(NULL)
+{
+  JScmd.gear = FORWARD;
+  JScmd.speed = 0;
+  JScmd.dir =  KEEP;
+  JScmd.deg = 0;
+  
+  SetJoystick();
+}
 
-//local define
-#define PORT "/dev/input/js0"            //Port path
-#define SENDSIZE 13                //Send data size (Byte)
+Ps3Joystick::~Ps3Joystick(void){
+  CloseJoystick();
+}
 
-int JSfd;                                                    //File discripter
-int *axis = NULL, num_of_axis = 0, num_of_buttons = 0;       //input information
-char *button = NULL, JSname[80];                             //Name of button & device
-
-/*---------------------------------------------------------------
-  Name     : SetJoystick
-  Argument : void
-  Return   : 0 (succeed), other (failed)
-  About    : Set up the Joystick controler
-  Version  : Ver 1.0
-  Date     : 2014/03/21
-  Author   : Ryodo Tanaka (Kyushu Institute of Technology)
------------------------------------------------------------------ */
-int SetJoystick(void)
+int Ps3Joystick::SetJoystick(void)
 {
   //File open
   if( (JSfd=open(PORT, O_RDONLY)) == -1){
@@ -69,16 +52,7 @@ int SetJoystick(void)
 
 }
 
-/*---------------------------------------------------------
-  Name     : CloseJoystick
-  Argument : void
-  Return   : void
-  About    : close file & free memory used by Joystick
-  Version  : Ver 1.0
-  Date     : 2014/03/21
-  Author   : Ryodo Tanaka (Kyushu Insitute of Technology)
- ----------------------------------------------------------*/
-void CloseJoystick(void)
+void Ps3Joystick::CloseJoystick(void)
 {
   close(JSfd);
   free(axis);
@@ -86,17 +60,7 @@ void CloseJoystick(void)
 }
 
 
-/*--------------------------------------------------------
-  Name     : GetJSinfo2MVcmd
-  Argument : MVcmd *cmd
-  Return   : void
-  About    : Get Joystick information
-             and get Move command
-  Version  : Ver 1.0
-  Date     : 2014/03/21
-  Author   : Ryodo Tanaka (Kyushu Insitute of Technology)
------------------------------------------------------------*/
-void GetJSinfo2MVcmd(MVcmd* cmd)
+void Ps3Joystick::GetJSinfo2MVcmd(void)
 {
   struct js_event JSinfo;
   
@@ -120,30 +84,30 @@ void GetJSinfo2MVcmd(MVcmd* cmd)
   switch(button[8] == button[9])
     {
     case 1:
-      cmd->speed = 0;
+      JScmd.speed = 0;
       break;
     default :
       //Get R2 button information
       switch(button[9])
-	{
-	case 1 :
-	  cmd->gear = FORWARD;
-	  cmd->speed = (float)(axis[13] + 32767) / 65534 * 220;
-	  break;
-	default :
-	  break;
-	}
+		{
+		case 1 :
+		  JScmd.gear = FORWARD;
+		  JScmd.speed = (float)(axis[13] + 32767) / 65534 * 220;
+		  break;
+		default :
+		  break;
+		}
 
       //Get L2 button information
       switch(button[8])
-	{
-	case 1 :
-	  cmd->gear = BACK;
-	  cmd->speed = (float)(axis[12] + 32767) / 65534 * 220;
-	  break;
-	default :
-	  break;
-	}
+		{
+		case 1 :
+		  JScmd.gear = BACK;
+		  JScmd.speed = (float)(axis[12] + 32767) / 65534 * 220;
+		  break;
+		default :
+		  break;
+		}
       break;
     }
 
@@ -151,7 +115,7 @@ void GetJSinfo2MVcmd(MVcmd* cmd)
   switch(button[10] | button[11])
     {
     case 1 :
-      cmd->speed = 0;
+      JScmd.speed = 0;
       break;
     default :
       break;
@@ -162,30 +126,28 @@ void GetJSinfo2MVcmd(MVcmd* cmd)
   switch(axis[0])
     {
     case 0 :
-      cmd->dir = KEEP;
+      JScmd.dir = KEEP;
       break;
     default :
       if(axis[0] < 0){
-	cmd->dir = LEFT;
+		JScmd.dir = LEFT;
       }
       else if(axis[0] > 0){
-	cmd->dir = RIGHT;
+		JScmd.dir = RIGHT;
       }
       break;
     }
-
 }
 
-int Move(const char DIRflg, const unsigned char speed, const char STEERflg)
+int Ps3Joystick::Move(void)
 {
   char buf[SENDSIZE] = {'.'};
 
-  if(DIRflg != 'F' && DIRflg != 'B') return 1;
-  else if(speed < 0 || 220 < speed) return 2;
-  else if(STEERflg != '+' && STEERflg != '-' && STEERflg != '@') return 3;
+  if(JScmd.gear != FORWARD && JScmd.gear != BACK ) return 1;
+  else if(JScmd.speed < 0 || 220 < JScmd.speed) return 2;
+  else if(JScmd.dir != RIGHT && JScmd.dir != LEFT && JScmd.dir != KEEP) return 3;
   else{
-    printf("$MV,%c%d%d%d,S%c\n;", DIRflg, speed/100,speed/10%10, speed%10 ,STEERflg);
-    //while(write(ARfd[AR_SEND_ID], buf, SENDSIZE) != SENDSIZE);
+    printf("$MV,%c%d%d%d,S%c\n;", JScmd.gear, JScmd.speed/100,JScmd.speed/10%10, JScmd.speed%10 ,JScmd.dir);
   }
   return 0;
 }
