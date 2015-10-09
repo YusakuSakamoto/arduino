@@ -50,7 +50,7 @@ void calc_checksum(unsigned char* confirm){
 //the aid array is unsigned char.
 //this function cast unsigned char to hexadecimal.
 //and input pack 2 byte.
-void Convert_Hexadecimal(unsigned char aid, unsigned char *pack,int count){
+void Convert_Hexadecimal(unsigned char aid, unsigned char *pack,int& count){
   switch( (int)( aid/16 ) ){
   case 10:
 	pack[count++] = 'a';

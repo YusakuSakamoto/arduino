@@ -7,9 +7,10 @@
 
 using namespace std;
 
-
+/*
 int main(int argc,char **argv)
 {
+  
   Ps3Joystick JoyStick;
 
   while(1){
@@ -18,7 +19,7 @@ int main(int argc,char **argv)
   }
   return 0;
 }
-
+*/
 
 //GPS
 /*
@@ -38,7 +39,7 @@ int main(int argc,char **argv){
 
 
 
-/*
+
 int main(int argc,char **argv){
   Arduino ARDUINO;
   while(1){
@@ -96,4 +97,4 @@ int main(int argc,char **argv){
 
   return 0;
 }
-*/
+

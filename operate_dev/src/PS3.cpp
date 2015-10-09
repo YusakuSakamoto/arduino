@@ -45,11 +45,8 @@ int Ps3Joystick::SetJoystick(void)
 
   //Use non-blocking mode
   fcntl(JSfd, F_SETFL, O_NONBLOCK);
-
   printf("%s\tis Connected ...\n", JSname);
-  
   return 0;
-
 }
 
 void Ps3Joystick::CloseJoystick(void)
