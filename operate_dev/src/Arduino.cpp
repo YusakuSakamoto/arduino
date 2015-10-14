@@ -42,73 +42,71 @@ int Arduino::recieveinfo()
 
 int Arduino::show_recieveinfo()
 {
-  if( (('0' <= recieve.moji && recieve.moji <= '9') || ('a' <= recieve.moji && recieve.moji <= 'f') || recieve.moji == '.' || recieve.moji == '*' || recieve.moji == ',') && recieve.counter < 30 ){//データを受け取り
-	input[  recieve.counter++ ] = recieve.moji;
-  }else if( recieve.moji == '$'){//ヘッダー無視
-  }else{
-	if( recieve.moji == '\n' ){//文の終わりを発見した時
-	  //データの分割==========================================
-	  int l=0;
-	  int y=0;
-	  recieve.flag = 1;
-	  while(input[l] != '\n' && l<30){
-		if(recieve.flag == 0){
-		  if(input[l] != '\n'){
-			recieve.checksum[y++] = input[l];
-		  }else{
-			l=0;
-			y=0;
-			recieve.flag = 1;
-		  }
-		}else if( recieve.flag  == 1 ){
-		  if(input[l] != '*'){
-			recieve.mm[y++] = input[l];
-		  }else{
-			y=0;
-			recieve.flag = 0;
-		  }
+  if( recieve.moji == '\n' ){//文の終わりを発見した時
+	//データの分割==========================================
+	int l=0;
+	int y=0;
+	recieve.flag = 1;
+	while(input[l] != '\n' && l<30){
+	  if(recieve.flag == 0){
+		if(input[l] != '\n'){
+		  recieve.checksum[y++] = input[l];
+		}else{
+		  l=0;
+		  y=0;
+		  recieve.flag = 1;
 		}
-		l++;
-	  }
-	  //=========================================
-
-	  //情報を浮動小数点型、整数型に変換し、ターミナルに出力
-	  //===========================================
-	  char* mm = (char *)recieve.mm;
-	  
-	  ping.mm = atof(mm);
-	  calc_checksum(input);
-	  
-	  if ((recieve.checksum[0] == ping.checksum[0]) && (recieve.checksum[1] == ping.checksum[1])){
-		printf("%.2f,%s .....[ ok ]\n", ping.mm, ping.checksum);
-		//データ出力	  
-		input[  recieve.counter++ ] = '\0';
-		record_file << data_num+1 << "\t" <<ping.inches << "\t" << ping.mm << "\t" << 0 << endl;
-		if(++data_num >= ANALYSIS_NUM){
-		  analize_start = true;
+	  }else if( recieve.flag  == 1 ){
+		if(input[l] != '*'){
+		  recieve.mm[y++] = input[l];
+		}else{
+		  y=0;
+		  recieve.flag = 0;
 		}
 	  }
-	  else{
-		printf("%s != %s .....[ false ]\n",ping.checksum,recieve.mm);
-	  }
-	  //===========================================
-	  
-	  recieve.flag = 0;
-	  
-	  //保存用配列の初期化
-	  //==========================================
-	  int k=0;
-	  for(int k=0;k<30;k++){
-		input[k] = '\0';
-	  }
-	  for(k=0;k<10;k++){
-		recieve.mm[k] = 0;
-		recieve.checksum[k] = 0;
-	  }
-	  //===========================================
+	  l++;
 	}
+	//=========================================
+
+	//情報を浮動小数点型、整数型に変換し、ターミナルに出力
+	//===========================================
+	char* mm = (char *)recieve.mm;
+	  
+	ping.mm = atof(mm);
+	calc_checksum(input);
+	  
+	if ((recieve.checksum[0] == ping.checksum[0]) && (recieve.checksum[1] == ping.checksum[1])){
+	  printf("%.2f,%s .....[ ok ]\n", ping.mm, ping.checksum);
+	  //データ出力	  
+	  input[  recieve.counter++ ] = '\0';
+	  record_file << data_num+1 << "\t" <<ping.inches << "\t" << ping.mm << "\t" << 0 << endl;
+	  if(++data_num >= ANALYSIS_NUM){
+		analize_start = true;
+	  }
+	}
+	else{
+	  printf("%s != %s .....[ false ]\n",ping.checksum,recieve.mm);
+	}
+	//===========================================
+	  
+	recieve.flag = 0;
+	  
+	//保存用配列の初期化
+	//==========================================
+	int k=0;
+	for(int k=0;k<30;k++){
+	  input[k] = '\0';
+	}
+	for(k=0;k<10;k++){
+	  recieve.mm[k] = 0;
+	  recieve.checksum[k] = 0;
+	}
+	//===========================================
 	recieve.counter = 0;
-  }
+  }else if( recieve.moji == '$'){//ヘッダー無視
+  }else
+	input[  recieve.counter++ ] = recieve.moji;
+  
   return 0;
 }
 
@@ -119,7 +117,6 @@ void Arduino::calc_checksum(unsigned char* confirm){
   unsigned char checksum;
   //cout << confirm << endl;
   count = sizeof(confirm)/sizeof(unsigned char);
-
   checksum = confirm[0];
   
   for( m=1; confirm[m] != '*'; m++ ){

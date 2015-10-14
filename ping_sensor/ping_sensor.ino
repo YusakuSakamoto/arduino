@@ -42,51 +42,16 @@ void calc_checksum(unsigned char* confirm){
 //this function cast unsigned char to hexadecimal.
 //and input pack 2 byte.
 void Convert_Hexadecimal(unsigned char aid, unsigned char *pack,int& count){
-  switch( (int)( aid/16 ) ){
-  case 10:
-	pack[count++] = 'a';
-	break;
-  case 11:
-	pack[count++] = 'b';
-	break;
-  case 12:
-	pack[count++] = 'c';
-	break;
-  case 13:
-	pack[count++] = 'd';
-	break;
-  case 14:
-	pack[count++] = 'e';
-	break;
-  case 15:
-	pack[count++] = 'f';
-	break;
-  default:
+  if( (int)( aid/16 ) >= 10 ){
+	pack[count++] = 97 + (int)(aid/16);
+  }else{
 	pack[count++] = 48 + (int)(aid/16);
   }
   
-  switch((int)(aid%16)){
-  case 10:
-	pack[count++] = 'a';
-	break;
-  case 11:
-	pack[count++] = 'b';
-	break;
-  case 12:
-	pack[count++] = 'c';
-	break;
-  case 13:
-	pack[count++] = 'd';
-	break;
-  case 14:
-	pack[count++] = 'e';
-	break;
-  case 15:
-	pack[count++] = 'f';
-	break;
-  default:
+  if( (int)(aid%16) >= 10 ){
+	pack[count++] = 87 + (int)(aid%16);
+  }else{
 	pack[count++] = 48 + (int)(aid%16);
-	break;
   }    
 }
 
