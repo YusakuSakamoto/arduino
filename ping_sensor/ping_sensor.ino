@@ -17,6 +17,13 @@ class Pingsensor{
 //============================================
 
 Pingsensor ping;
+int i;
+int m;
+int index;
+int inches; 
+int mm;
+int count;
+double duration;
 
 void setup() {
   Serial.begin(9600);
@@ -24,7 +31,6 @@ void setup() {
 
 void loop() {
   get_mm_data();
-  int i;
   i = create_packet();
   Serial.write(ping.packet,i);
 }
@@ -34,7 +40,6 @@ void loop() {
 //this function cast unsigned char to hexadecimal.
 //and input pack 2 byte.
 void Convert_Hexadecimal(unsigned char *pack,int& count){
-  int m;
   ping.data.checksum = pack[1];
   for( m=2; pack[m] != '*'; m++ ){
 	if( pack[m] != '$' && pack[m] != ',')
@@ -59,10 +64,8 @@ void Convert_Hexadecimal(unsigned char *pack,int& count){
 
 
 int create_packet(){
-  int index = 0;
-  int inches; 
-  int mm;
-  int count = 0;
+  index = 0;
+  count = 0;
   ping.data.checksum = 0;
   ping.packet[count++] = '$';  
 
@@ -92,7 +95,6 @@ int create_packet(){
 }
 
 int get_mm_data(){
-  double duration;
   pinMode(pingPin, OUTPUT);
   digitalWrite(pingPin, LOW);
   delayMicroseconds(2);
