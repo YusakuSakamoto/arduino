@@ -1,5 +1,6 @@
 #define pingPin 7
-
+#define t 22.5
+#define Speed_of_sound (331.5 + 0.6 * t)/1000
 //===============================================
 //structure of send information but not body.
 typedef struct{
@@ -103,6 +104,6 @@ int get_mm_data(){
   pinMode(pingPin, INPUT);
   digitalWrite(pingPin, HIGH);
   duration = pulseIn(pingPin, HIGH)/2;
-  ping.data.mm = duration*0.34442;
+  ping.data.mm = duration * Speed_of_sound;
   delay(250);
 }
