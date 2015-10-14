@@ -50,28 +50,22 @@ int Arduino::show_recieveinfo()
 	  //データの分割==========================================
 	  int l=0;
 	  int y=0;
+	  recieve.flag = 1;
 	  while(input[l] != '\n' && l<30){
-		if(recieve.flag == 2){
-		  if(input[l] != '$'){
+		if(recieve.flag == 0){
+		  if(input[l] != '\n'){
 			recieve.checksum[y++] = input[l];
 		  }else{
 			l=0;
-			y=0;
-			recieve.flag = 0;
-		  }
-		}else if( recieve.flag == 0 ){
-		  if(input[l] != ','){
-			recieve.inches[y++] = input[l];
-		  }else{
 			y=0;
 			recieve.flag = 1;
 		  }
 		}else if( recieve.flag  == 1 ){
 		  if(input[l] != '*'){
-			recieve.cm[y++] = input[l];
+			recieve.mm[y++] = input[l];
 		  }else{
 			y=0;
-			recieve.flag = 2;
+			recieve.flag = 0;
 		  }
 		}
 		l++;
@@ -80,24 +74,22 @@ int Arduino::show_recieveinfo()
 
 	  //情報を浮動小数点型、整数型に変換し、ターミナルに出力
 	  //===========================================
-	  char* inches = (char *)recieve.inches;
-	  char* cm = (char *)recieve.cm;
+	  char* mm = (char *)recieve.mm;
 	  
-	  ping.inches = atof(inches);
-	  ping.cm = atof(cm);
+	  ping.mm = atof(mm);
 	  calc_checksum(input);
 	  
 	  if ((recieve.checksum[0] == ping.checksum[0]) && (recieve.checksum[1] == ping.checksum[1])){
-		printf("%.2f,%.2f,%s .....[ ok ]\n", ping.inches, ping.cm, ping.checksum);
+		printf("%.2f,%s .....[ ok ]\n", ping.mm, ping.checksum);
 		//データ出力	  
 		input[  recieve.counter++ ] = '\0';
-		record_file << data_num+1 << "\t" <<ping.inches << "\t" << ping.cm << "\t" << 0 << endl;
+		record_file << data_num+1 << "\t" <<ping.inches << "\t" << ping.mm << "\t" << 0 << endl;
 		if(++data_num >= ANALYSIS_NUM){
 		  analize_start = true;
 		}
 	  }
 	  else{
-		printf("%s .....[ false ]\n",ping.checksum);
+		printf("%s != %s .....[ false ]\n",ping.checksum,recieve.mm);
 	  }
 	  //===========================================
 	  
@@ -110,8 +102,7 @@ int Arduino::show_recieveinfo()
 		input[k] = '\0';
 	  }
 	  for(k=0;k<10;k++){
-		recieve.inches[k] = 0;
-		recieve.cm[k] = 0;
+		recieve.mm[k] = 0;
 		recieve.checksum[k] = 0;
 	  }
 	  //===========================================
@@ -120,6 +111,8 @@ int Arduino::show_recieveinfo()
   }
   return 0;
 }
+
+
 
 void Arduino::calc_checksum(unsigned char* confirm){
   int m,count,k;
@@ -134,51 +127,16 @@ void Arduino::calc_checksum(unsigned char* confirm){
 	  checksum = checksum ^ confirm[m];
   }
 
-  switch((int)(checksum/16)){
-  case 10:
-	ping.checksum[0] = 'a';
-	break;
-  case 11:
-	ping.checksum[0] = 'b';
-	break;
-  case 12:
-	ping.checksum[0] = 'c';
-	break;
-  case 13:
-	ping.checksum[0] = 'd';
-	break;
-  case 14:
-	ping.checksum[0] = 'e';
-	break;
-  case 15:
-	ping.checksum[0] = 'f';
-	break;
-  default:
+  if( (int)(checksum/16) >= 10 ){
+	ping.checksum[0] = 97 + (int)(checksum/16);
+  }else{
 	ping.checksum[0] = 48 + (int)(checksum/16);
   }
   
-  switch((int)(checksum%16)){
-  case 10:
-	ping.checksum[1] = 'a';
-	break;
-  case 11:
-	ping.checksum[1] = 'b';
-	break;
-  case 12:
-	ping.checksum[1] = 'c';
-	break;
-  case 13:
-	ping.checksum[1] = 'd';
-	break;
-  case 14:
-	ping.checksum[1] = 'e';
-	break;
-  case 15:
-	ping.checksum[1] = 'f';
-	break;
-  default:
+  if( (int)(checksum%16) >= 10 ){
+	ping.checksum[1] = 87 + (int)(checksum%16);//97-10
+  }else{
 	ping.checksum[1] = 48 + (int)(checksum%16);
-	break;
   }
   ping.checksum[2] = '\0';
 }

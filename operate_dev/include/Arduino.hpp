@@ -14,8 +14,7 @@ typedef struct{
 
 typedef struct{
   unsigned char moji;
-  unsigned char inches[10];
-  unsigned char cm[10];
+  unsigned char mm[10];
   unsigned char checksum[10];
   int counter;
   int flag;
@@ -24,7 +23,7 @@ typedef struct{
 
 typedef struct{
   double inches;
-  double cm;
+  double mm;
   unsigned char checksum[3];
 }ping_data;
 
