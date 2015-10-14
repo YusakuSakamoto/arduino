@@ -29,30 +29,31 @@ void loop() {
 }
 
 // this function calc XOR unsigned char array after '$' before '*' 
-void calc_checksum(unsigned char* confirm){
-  int m=2;
-  ping.data.checksum = confirm[1];
-  for( m=2; confirm[m] != '*'; m++ ){
-	if(confirm[m] != '$' && confirm[m] != ',')
-	  ping.data.checksum = ping.data.checksum ^ confirm[m];
-  }
-}
-
 //the aid array is unsigned char.
 //this function cast unsigned char to hexadecimal.
 //and input pack 2 byte.
-void Convert_Hexadecimal(unsigned char aid, unsigned char *pack,int& count){
-  if( (int)( aid/16 ) >= 10 ){
-	pack[count++] = 97 + (int)(aid/16);
-  }else{
-	pack[count++] = 48 + (int)(aid/16);
+void Convert_Hexadecimal(unsigned char *pack,int& count){
+  int m;
+  ping.data.checksum = pack[1];
+  for( m=2; pack[m] != '*'; m++ ){
+	if( pack[m] != '$' && pack[m] != ',')
+	  ping.data.checksum = ping.data.checksum ^ pack[m];
   }
   
-  if( (int)(aid%16) >= 10 ){
-	pack[count++] = 87 + (int)(aid%16);
+  ping.packet[count++] = '*';
+  
+  if( (int)( ping.data.checksum/16 ) >= 10 ){
+	pack[count++] = 97 + (int)(ping.data.checksum/16);
   }else{
-	pack[count++] = 48 + (int)(aid%16);
-  }    
+	pack[count++] = 48 + (int)(ping.data.checksum/16);
+  }
+  
+  if( (int)(ping.data.checksum%16) >= 10 ){
+	pack[count++] = 87 + (int)(ping.data.checksum%16);
+  }else{
+	pack[count++] = 48 + (int)(ping.data.checksum%16);
+  }
+    ping.packet[count++] = '\n';
 }
 
 
@@ -83,13 +84,9 @@ int create_packet(){
     ping.packet[count++] = (unsigned char) mm + 48;
   }
   //============================================
-  calc_checksum(ping.packet);//copy packet to data.checksum with sum unsigned char
-  ping.packet[count++] = '*';
-  
+  //copy packet to data.checksum with sum unsigned char
   //convert data.checksum to Hexadecimal and add pocket 
-  Convert_Hexadecimal(ping.data.checksum,ping.packet,count);
-  ping.packet[count++] = '\n';
-  
+  Convert_Hexadecimal(ping.packet,count);
   return count;  
 }
 
